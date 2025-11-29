@@ -52,7 +52,7 @@ function App() {
           {/* TOP FILTER */}
           <div className="tabs tabs-lift h-full">
             <label className="tab">
-              <input type="radio" name="my_tabs_4" />
+              <input type="radio" name="my_tabs_4" defaultChecked />
               Phòng bàn
             </label>
             <div className="tab-content bg-base-100 border-base-300 p-6">
