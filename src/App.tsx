@@ -17,16 +17,16 @@ function App() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
 
   const rooms: Room[] = [...Array.from({ length: 19 }, (_, i) => ({ id: i + 1, name: `BOX ${i + 1}` }))];
-  const ordes: any[] = [
-    { name: "Coca Cola", quantity: 2, price: 15000 },
-    { name: "Pepsi", quantity: 1, price: 12000 },
-  ];
-  const prices: any[] = [
-    { label: "1 người", amount: 60000 },
-    { label: "2-3 người", amount: 85000 },
-    { label: "4-6 người", amount: 115000 },
-    { label: "7-10 người", amount: 135000 },
-  ];
+  // const ordes: any[] = [
+  //   { name: "Coca Cola", quantity: 2, price: 15000 },
+  //   { name: "Pepsi", quantity: 1, price: 12000 },
+  // ];
+  // const prices: any[] = [
+  //   { label: "1 người", amount: 60000 },
+  //   { label: "2-3 người", amount: 85000 },
+  //   { label: "4-6 người", amount: 115000 },
+  //   { label: "7-10 người", amount: 135000 },
+  // ];
 
   console.log({ timeMinute });
 
