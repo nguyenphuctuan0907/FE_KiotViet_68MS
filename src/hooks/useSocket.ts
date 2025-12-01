@@ -7,6 +7,7 @@ export const useSocket = (url: string) => {
 
   useEffect(() => {
     const newSocket = io(url); // kết nối tới server NestJS
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSocket(newSocket);
 
     return () => {
