@@ -3,6 +3,11 @@ import React, { useEffect, useState, useRef } from "react";
 import { Search, ShoppingCart, Bell, Pause, SkipForward } from "lucide-react";
 import { calculateHoursRounded, calculateMinutesRounded, calculatePrice, getActiveAndNextRules, priceRules, type Rule } from "../common";
 import { useRobustSocket } from "../hooks/useSocket";
+import Modal from "./Modal";
+import { useApi } from "../hooks/useApi";
+import { payosService } from "../service";
+import PayOSQrBox from "./PayOSQrBox";
+import Button from "./Button";
 
 interface Room {
   id: number;
@@ -23,6 +28,10 @@ interface Order {
   total?: number;
 }
 
+interface ResPayment {
+  qrCode: string;
+}
+
 const HEARTBEAT_INTERVAL_MS = 60_000; // 1 phút
 const ROOMS: Room[] = [...Array.from({ length: 19 }, (_, i) => ({ id: i + 1, name: `BOX ${i + 1}` }))];
 const orders: Order[] = [
@@ -33,7 +42,7 @@ const orders: Order[] = [
 function RoomView() {
   // const socket: any = useRoomHeartbeatSocket(import.meta.env.VITE_URL_SOCKET || "https://2ec99c5ee883.ngrok-free.app");
   const { socket, isConnected, lastError, emit } = useRobustSocket({
-    url: import.meta.env.VITE_URL_SOCKET || "https://a237c503db73.ngrok-free.app",
+    url: import.meta.env.VITE_URL_SOCKET || "https://9f0758255ae0.ngrok-free.app",
     heartbeatInterval: 30000, // 30 giây
     maxReconnectAttempts: 20,
   });
@@ -41,8 +50,11 @@ function RoomView() {
   const [rooms, setRooms] = useState<Room[]>(ROOMS);
   const [timeMinute, setTimeMinute] = useState<number | Date>(0);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   const visibilityRef = useRef(!document.hidden);
 
+  const { callApi: apiCreatePayment, data: resPayment } = useApi<any>(payosService.createPayment);
+  console.log({ resPayment });
   // Hiển thị connection status
   useEffect(() => {
     console.log("Connection status:", isConnected ? "✅ Connected" : "❌ Disconnected");
@@ -221,6 +233,28 @@ function RoomView() {
     setRooms(roomsUpdateStatus);
   };
 
+  const handleClickOpenPopupPayment = (roomId: number) => {
+    if (!roomId) return;
+    setIsOpen(true);
+  };
+
+  const handleConfirm = async () => {
+    setIsOpen(false);
+
+    if (!selectedRoom) return;
+    const findRoom = rooms.find((room) => room.id === selectedRoom.id);
+    if (!findRoom) return;
+
+    await apiCreatePayment({
+      amount: findRoom.total || 0,
+      cancelUrl: "",
+      returnUrl: "",
+      boxId: findRoom.id,
+    });
+  };
+
+  const handleConfirmCash = async () => {};
+
   return (
     <div>
       <div className="w-screen h-screen flex text-red-800 select-none">
@@ -352,6 +386,31 @@ function RoomView() {
                       );
                     })}
                 </div>
+
+                <div>
+                  {/* Hiển thị QR */}
+                  <div className="tabs tabs-border">
+                    <input type="radio" name="my_tabs_2" className="tab text-blue-600 font-bold" aria-label="Tiền mặt" defaultChecked />
+                    <div className="tab-content p-5">
+                      <Button
+                        variant="primary"
+                        onClick={() => {
+                          handleConfirmCash();
+                        }}
+                      >
+                        Hoàn thành
+                      </Button>
+                    </div>
+
+                    <input type="radio" name="my_tabs_2" className="tab text-blue-600 font-bold" aria-label="Chuyển khoản" />
+                    <div className="tab-content p-5">Chuyển khoản</div>
+                  </div>
+                  {resPayment && (
+                    <div>
+                      <PayOSQrBox checkoutUrl={resPayment.qrCode} />
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               "Chưa có món trong đơn"
@@ -360,21 +419,16 @@ function RoomView() {
 
           <div className="border-t p-4 flex justify-between items-center bg-white shadow-lg mt-auto">
             <div className="text-lg font-bold">Tổng tiền: {selectedRoom ? rooms.find((room) => room.id === selectedRoom.id)?.total?.toLocaleString() : "0"}đ</div>
-            <button className="px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition">Thanh toán (F9)</button>
+            <button className="px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition" onClick={() => selectedRoom && handleClickOpenPopupPayment(selectedRoom.id)}>
+              Thanh toán
+            </button>
           </div>
         </div>
+
+        <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} onConfirm={handleConfirm} size="lg" position="center">
+          <div className="font-bold">Bạn có muốn dừng tính giờ và thanh toán đơn hàng này không?</div>
+        </Modal>
       </div>
-      {/* debug */}
-      {/* <div style={{ position: "fixed", right: 10, bottom: 10, zIndex: 999 }}>
-        <div className="text-xs bg-white p-2 rounded shadow">
-          <div>Last heartbeats:</div>
-          <ul className="text-xs">
-            {timeMinute.map((t) => (
-              <li key={t}>{new Date(t).toLocaleTimeString()}</li>
-            ))}
-          </ul>
-        </div>
-      </div> */}
     </div>
   );
 }

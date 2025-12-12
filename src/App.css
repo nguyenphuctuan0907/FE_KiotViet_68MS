@@ -1,6 +1,18 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes: light --default;
+}
 @theme {
+  /* DaisyUI yêu cầu theme được define ở đây */
+  /* --color-primary: #570df8;
+  --color-secondary: #f000b8;
+  --color-accent: #1dcdbc;
+  --color-neutral: #2a323c;
+  --color-base-100: #ffffff;
+  --color-base-200: #f2f2f2;
+  --color-base-300: #e5e6e6; */
+
+  /* Font của bạn */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
