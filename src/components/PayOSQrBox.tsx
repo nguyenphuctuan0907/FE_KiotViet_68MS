@@ -3,9 +3,10 @@ import { QRCodeCanvas } from "qrcode.react";
 
 interface PayOSQrBoxProps {
   checkoutUrl: string;
+  loading?: boolean;
 }
 
-const PayOSQrBox: React.FC<PayOSQrBoxProps> = ({ checkoutUrl }) => {
+const PayOSQrBox: React.FC<PayOSQrBoxProps> = ({ checkoutUrl, loading }) => {
   return (
     <div
       style={{
@@ -26,13 +27,12 @@ const PayOSQrBox: React.FC<PayOSQrBoxProps> = ({ checkoutUrl }) => {
           borderRadius: 12,
           display: "flex",
           justifyContent: "center",
+          alignItems: "center",
+          position: "relative",
         }}
       >
-        <QRCodeCanvas value={checkoutUrl} size={200} level="H" includeMargin={false} style={{ borderRadius: 8 }} />
-      </div>
-
-      <div style={{ marginTop: 16, textAlign: "center" }}>
-        <div style={{ fontSize: 18, fontWeight: 600 }}>Quét QR để thanh toán</div>
+        {loading && <span className="loading loading-spinner loading-xl text-secondary absolute self-center"></span>}
+        {checkoutUrl && <QRCodeCanvas value={checkoutUrl} size={200} level="H" includeMargin={false} style={{ borderRadius: 8 }} />}
       </div>
     </div>
   );

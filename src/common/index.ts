@@ -4,42 +4,43 @@ export type Rule = {
   startTime: string; // "17:00"
   endTime: string; // "20:00"
   pricePerHour: number;
-  dayOfWeek: number; // 0 = ngày thường (T2-T6), 1 = cuối tuần (T7-CN)
+  dayType: string;
   total?: number;
 };
 
-function getDayType(): 0 | 1 {
+function getDayType(): "WEEKEND" | "NORMAL" {
   const d = new Date().getDay(); // 0=CN, 1=T2,... 6=T7
 
   // 0 = CN, 6 = T7 → cuối tuần
-  if (d === 0 || d === 6) return 1;
+  if (d === 0 || d === 6) return "WEEKEND";
 
   // 1-5 → T2 đến T6 → ngày thường
-  return 0;
+  return "NORMAL";
 }
 
 export function getActiveAndNextRules(rules: Rule[]): {
   active: Rule[];
-  next: Rule[];
 } {
+  console.log({ rules });
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const dayType = getDayType();
+  const min24 = 23 * 60 + 59;
+  const min1 = 0 * 60;
   const active =
     rules.filter((r) => {
       const s = toMinutes(r.startTime);
       const e = toMinutes(r.endTime);
-      return nowMin >= s && nowMin < e && r.dayOfWeek === dayType;
-    }) || null;
 
-  const next = rules
-    .filter((r) => {
-      const s = toMinutes(r.startTime);
-      return s > nowMin && r.dayOfWeek === dayType; // khung giờ sau
-    })
-    .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime));
+      if (s < e) {
+        return nowMin >= s && nowMin < e && r.dayType === dayType;
+      }
 
-  return { active, next };
+      return (nowMin >= s && nowMin <= min24 && r.dayType === dayType) || (nowMin <= e && nowMin >= min1 && r.dayType === dayType);
+    }) || [];
+
+  console.log({ active });
+  return { active };
 }
 
 function toMinutes(time: string) {
@@ -175,6 +176,36 @@ export const priceRules = [
   // cuối tuần
   {
     id: "priceRules-13",
+    name: "Box 1 người",
+    startTime: "06:00",
+    endTime: "13:59",
+    minPeople: 1,
+    maxPeople: 1,
+    pricePerHour: 30000,
+    dayOfWeek: 1,
+  },
+  {
+    id: "priceRules-14",
+    name: "Box 1 người",
+    startTime: "14:00",
+    endTime: "17:59",
+    minPeople: 1,
+    maxPeople: 1,
+    pricePerHour: 60000,
+    dayOfWeek: 1,
+  },
+  {
+    id: "priceRules-15",
+    name: "Box 1 người",
+    startTime: "18:00",
+    endTime: "05:59",
+    minPeople: 1,
+    maxPeople: 1,
+    pricePerHour: 90000,
+    dayOfWeek: 1,
+  },
+  {
+    id: "priceRules-16",
     name: "Box 2-3 người",
     startTime: "06:00",
     endTime: "13:59",
@@ -184,7 +215,7 @@ export const priceRules = [
     dayOfWeek: 1,
   },
   {
-    id: "priceRules-14",
+    id: "priceRules-17",
     name: "Box 2-3 người",
     startTime: "14:00",
     endTime: "17:59",
@@ -194,13 +225,73 @@ export const priceRules = [
     dayOfWeek: 1,
   },
   {
-    id: "priceRules-15",
+    id: "priceRules-18",
     name: "Box 2-3 người",
     startTime: "18:00",
     endTime: "05:59",
     minPeople: 2,
     maxPeople: 3,
     pricePerHour: 90000,
+    dayOfWeek: 1,
+  },
+  {
+    id: "priceRules-19",
+    name: "Box 4-6 người",
+    startTime: "06:00",
+    endTime: "13:59",
+    minPeople: 4,
+    maxPeople: 6,
+    pricePerHour: 35000,
+    dayOfWeek: 1,
+  },
+  {
+    id: "priceRules-20",
+    name: "Box 4-6 người",
+    startTime: "14:00",
+    endTime: "17:59",
+    minPeople: 4,
+    maxPeople: 6,
+    pricePerHour: 75000,
+    dayOfWeek: 1,
+  },
+  {
+    id: "priceRules-21",
+    name: "Box 4-6 người",
+    startTime: "18:00",
+    endTime: "05:59",
+    minPeople: 4,
+    maxPeople: 6,
+    pricePerHour: 120000,
+    dayOfWeek: 1,
+  },
+  {
+    id: "priceRules-22",
+    name: "Box 7-10 người",
+    startTime: "06:00",
+    endTime: "13:59",
+    minPeople: 7,
+    maxPeople: 10,
+    pricePerHour: 60000,
+    dayOfWeek: 1,
+  },
+  {
+    id: "priceRules-23",
+    name: "Box 7-10 người",
+    startTime: "14:00",
+    endTime: "17:59",
+    minPeople: 7,
+    maxPeople: 10,
+    pricePerHour: 85000,
+    dayOfWeek: 1,
+  },
+  {
+    id: "priceRules-24",
+    name: "Box 7-10 người",
+    startTime: "18:00",
+    endTime: "05:59",
+    minPeople: 7,
+    maxPeople: 10,
+    pricePerHour: 150000,
     dayOfWeek: 1,
   },
 ];
@@ -227,4 +318,57 @@ export function calculatePrice(minutes: number, pricePerHour: number): number {
   if (!minutes || !pricePerHour) return 0;
   const hours = minutes / 60;
   return Math.ceil(hours * pricePerHour);
+}
+
+// Định nghĩa enum cho type
+export const ItemType = {
+  DRINK: "DRINK",
+  FOOD: "FOOD",
+  SNACK: "SNACK",
+} as const;
+
+export type ItemType = (typeof ItemType)[keyof typeof ItemType];
+
+// Định nghĩa interface
+export interface MenuItem {
+  id: number;
+  name: string;
+  price: number;
+  type: ItemType;
+}
+
+// Group với type an toàn
+export const groupByType = (items: MenuItem[]): Record<ItemType, MenuItem[]> => {
+  if (!items) return {} as Record<ItemType, MenuItem[]>;
+  return items.reduce((acc, item) => {
+    if (!acc[item.type]) {
+      acc[item.type] = [];
+    }
+    acc[item.type].push(item);
+    return acc;
+  }, {} as Record<ItemType, MenuItem[]>);
+};
+
+export function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  return (...args: Parameters<T>) => {
+    if (timer) clearTimeout(timer);
+
+    timer = setTimeout(() => {
+      fn(...args);
+    }, delay);
+  };
+}
+
+export function swapObjectsInPlace<T extends Record<string, any>>(obj1: T, obj2: T, keys?: (keyof T)[]): void {
+  const keysToSwap = keys || (Object.keys(obj1) as (keyof T)[]).filter((key) => key in obj2);
+
+  keysToSwap.forEach((key) => {
+    if (key in obj1) {
+      const temp = obj1[key];
+      obj1[key] = obj2[key];
+      obj2[key] = temp;
+    }
+  });
 }
