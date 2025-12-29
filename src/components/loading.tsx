@@ -19,7 +19,7 @@ interface TransparentLoadingProps {
   color?: string;
 }
 
-const TransparentLoading: React.FC<TransparentLoadingProps> = ({ text = "Đang tải...", opacity = 0.7, bgColor = "bg-base-100", blurBackground = false, withBackdrop = true, type = "spinner", size = "lg", color = "primary" }) => {
+const TransparentLoading: React.FC<TransparentLoadingProps> = ({ opacity = 0.7, bgColor = "bg-base-100", blurBackground = false, withBackdrop = true, type = "spinner", size = "lg", color = "primary" }) => {
   const sizeClasses = {
     sm: "w-8 h-8",
     md: "w-12 h-12",

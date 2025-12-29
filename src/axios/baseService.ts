@@ -1,11 +1,6 @@
 import { type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { axiosInstance } from "./axiosInstance";
 
-function wrapApi<T>(method: "GET" | "POST" | "PUT" | "DELETE", fn: (params?: any) => Promise<T>) {
-  (fn as any).method = method;
-  return fn;
-}
-
 export const baseService = {
   get: async <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     const response: AxiosResponse<T> = await axiosInstance.get(url, config);
@@ -26,8 +21,8 @@ export const baseService = {
   delete: async <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
     const response: AxiosResponse<T> = await axiosInstance.delete(url, {
       ...config,
-      data: data
+      data: data,
     });
     return response.data;
-  }
+  },
 };

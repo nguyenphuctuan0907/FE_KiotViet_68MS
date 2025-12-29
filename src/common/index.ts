@@ -21,7 +21,6 @@ function getDayType(): "WEEKEND" | "NORMAL" {
 export function getActiveAndNextRules(rules: Rule[]): {
   active: Rule[];
 } {
-  console.log({ rules });
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const dayType = getDayType();
@@ -38,8 +37,6 @@ export function getActiveAndNextRules(rules: Rule[]): {
 
       return (nowMin >= s && nowMin <= min24 && r.dayType === dayType) || (nowMin <= e && nowMin >= min1 && r.dayType === dayType);
     }) || [];
-
-  console.log({ active });
   return { active };
 }
 
