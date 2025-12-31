@@ -42,7 +42,7 @@ interface Order {
 
 function RoomView() {
   const { socket, isConnected } = useRobustSocket({
-    url: import.meta.env.VITE_URL_SOCKET || "https://d23e55d4cc33.ngrok-free.app",
+    url: import.meta.env.VITE_URL_SOCKET || "https://0af6c8fb891f.ngrok-free.app",
     heartbeatInterval: 30000, // 30 giây
     maxReconnectAttempts: 20,
   });
@@ -808,11 +808,11 @@ function RoomView() {
             </div>
           </div>
 
-          <div className="text-gray-400 text-sm">
+          <div className="text-gray-400 text-sm h-[850px]">
             {!selectedRoom ? (
-              "Vui lòng chọn phòng bên trái"
+              <div className="font-bold p-4">Vui lòng chọn phòng bên trái</div>
             ) : selectedRoom.id ? (
-              <div className="h-[850px] overflow-y-auto">
+              <div className="overflow-y-auto">
                 <div>
                   {existRoom?.priceRule && (
                     <div key={existRoom?.priceRule?.id} className="w-full px-4 py-2 border-b text-black mt-3">
