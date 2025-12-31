@@ -812,7 +812,7 @@ function RoomView() {
             {!selectedRoom ? (
               <div className="font-bold p-4">Vui lòng chọn phòng bên trái</div>
             ) : selectedRoom.id ? (
-              <div className="overflow-y-auto h-[850px]">
+              <div className="overflow-y-auto h-[750px]">
                 <div>
                   {existRoom?.priceRule && (
                     <div key={existRoom?.priceRule?.id} className="w-full px-4 py-2 border-b text-black mt-3">
