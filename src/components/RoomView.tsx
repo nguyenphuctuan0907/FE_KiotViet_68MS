@@ -766,7 +766,7 @@ function RoomView() {
                         <div className="grid grid-cols-7 gap-4 p-4 overflow-y-auto">
                           {items.map((item, index) => (
                             <div key={`${type}-${index}`} className="cursor-pointer h-42 rounded-2xl relative flex flex-col items-center justify-center shadow-sm transition hover:shadow-lg" onClick={() => handleClickOrder(item)}>
-                              <img className="h-28 w-32" src={`/public/BANH_TRANG.jpg`} alt="" />
+                              <img className="h-28 w-32" src={`/BANH_TRANG.jpg`} alt="" />
                               <p className="text-sm font-semibold mb-1">{item.price.toLocaleString("vi-VN")}</p>
                               <h3 className="text-sm font-semibold text-cyan-700">{item.name}</h3>
                             </div>
