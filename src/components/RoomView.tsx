@@ -700,7 +700,7 @@ function RoomView() {
       {loadingPaymentCash && <Loading />}
       <div className="w-screen h-screen flex text-red-800 select-none">
         <div className="w-3/5 border-r">
-          <div className="tabs tabs-lift h-full bg-[#f4f7fc] ">
+          <div className="tabs tabs-lift h-full bg-[#f4f7fc]">
             <input type="radio" name="my_tabs" role="tab" className="tab checked:bg-blue-600 checked:text-white font-bold text-lg" aria-label="🌟 Phòng bàn" defaultChecked />
             <div className="tab-content bg-[#f4f7fc] border-base-300 p-6">
               <div className="grid grid-cols-7 gap-4 p-4 overflow-y-auto ">
@@ -812,7 +812,7 @@ function RoomView() {
             {!selectedRoom ? (
               <div className="font-bold p-4">Vui lòng chọn phòng bên trái</div>
             ) : selectedRoom.id ? (
-              <div className="overflow-y-auto">
+              <div className="overflow-y-auto h-[850px]">
                 <div>
                   {existRoom?.priceRule && (
                     <div key={existRoom?.priceRule?.id} className="w-full px-4 py-2 border-b text-black mt-3">
