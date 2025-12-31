@@ -42,7 +42,7 @@ interface Order {
 
 function RoomView() {
   const { socket, isConnected } = useRobustSocket({
-    url: import.meta.env.VITE_URL_SOCKET || "https://930b20e694f1.ngrok-free.app",
+    url: import.meta.env.VITE_URL_SOCKET || "https://d23e55d4cc33.ngrok-free.app",
     heartbeatInterval: 30000, // 30 giây
     maxReconnectAttempts: 20,
   });
@@ -766,7 +766,7 @@ function RoomView() {
                         <div className="grid grid-cols-7 gap-4 p-4 overflow-y-auto">
                           {items.map((item, index) => (
                             <div key={`${type}-${index}`} className="cursor-pointer h-42 rounded-2xl relative flex flex-col items-center justify-center shadow-sm transition hover:shadow-lg" onClick={() => handleClickOrder(item)}>
-                              <img className="h-28 w-32" src={`/public/${item.name}.jpg`} alt="" />
+                              <img className="h-28 w-32" src={`/public/BÁNH_TRÁNG.jpg`} alt="" />
                               <p className="text-sm font-semibold mb-1">{item.price.toLocaleString("vi-VN")}</p>
                               <h3 className="text-sm font-semibold text-cyan-700">{item.name}</h3>
                             </div>
