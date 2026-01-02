@@ -105,7 +105,7 @@ function RoomView() {
       await apiGetPrices();
       await apiGetDishs();
     }
-    setTimeMinute(Date.now());
+    setTimeMinute(dayjs().valueOf());
     run();
   }, []);
 
