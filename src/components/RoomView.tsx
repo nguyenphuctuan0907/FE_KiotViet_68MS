@@ -11,6 +11,7 @@ import Button from "./Button";
 import { useAlert } from "../hooks/useAlert";
 import Loading from "./loading";
 import { useStateRef } from "../hooks/useStateRef";
+import dayjs, { TZ_VN } from "../dayjs";
 
 interface Room {
   id: number;
@@ -42,7 +43,7 @@ interface Order {
 
 function RoomView() {
   const { socket, isConnected } = useRobustSocket({
-    url: import.meta.env.VITE_URL_SOCKET || "https://0af6c8fb891f.ngrok-free.app",
+    url: import.meta.env.VITE_URL_SOCKET || "https://2100f44af705.ngrok-free.app",
     heartbeatInterval: 30000, // 30 giây
     maxReconnectAttempts: 20,
   });
@@ -336,7 +337,7 @@ function RoomView() {
     const roomsUpdateStatus: Room[] = rooms.map((room: Room) => {
       if (room.id === selectedRoom.id) {
         room.using = true;
-        const start = room.start || new Date();
+        const start = room.start || dayjs().tz(TZ_VN).toDate();
         room.start = typeof start === "number" ? new Date(start) : start;
 
         const minutes = calculateMinutesRounded(typeof room.start === "number" ? room.start : new Date(room.start).getTime(), typeof timeMinute === "number" ? timeMinute : timeMinute.getTime());
@@ -396,7 +397,7 @@ function RoomView() {
     if (!existRoom) return;
 
     existRoom.billStatus = "PAYING";
-    existRoom.end = new Date(timeMinute);
+    existRoom.end = dayjs(timeMinute).tz(TZ_VN).toDate();
 
     setRooms([...rooms]);
 
