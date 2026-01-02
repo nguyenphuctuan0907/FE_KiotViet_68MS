@@ -1,3 +1,5 @@
+import dayjs from "../dayjs";
+
 export type Rule = {
   id: string;
   name: string;
@@ -299,9 +301,9 @@ export function calculateMinutesRounded(startTime: number, endTime: number): num
   if (endTime <= startTime) {
     return 0.001;
   }
-  const diffInMs = endTime - startTime;
-  const minutes = diffInMs / (1000 * 60);
-  return Math.ceil(minutes);
+  // const diffInMs = endTime - startTime;
+  // const minutes = diffInMs / (1000 * 60);
+  return dayjs(endTime).diff(dayjs(startTime), "minute");
 }
 
 export function calculateHoursRounded(minutes: number): number {
