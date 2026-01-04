@@ -75,10 +75,11 @@ function RoomView() {
   const { callApi: apiUpdateDiscountBill } = useApi<any>(billService.updateDiscountBill);
   const { callApi: apiClearDiscountBill, loading: loadingClearDiscountBill } = useApi<any>(billService.clearDiscountBill);
   const { callApi: apiChangeBox, loading: loadingChangeBox } = useApi<any>(boxsService.changeBox);
+  const { callApi: apiGetTimeMinutes } = useApi<any>(boxsService.getTimeMinutes);
 
   const debouncedAddDish = useMemo(() => debounce((params: any, options) => apiCreateBill(params, options), 1000), []);
   const debouncedDeleteBillDish = useMemo(() => debounce((params: any, options) => apiDeleteBillDish(params, options), 1000), []);
-  const debouncedUpdateBillStatus = useMemo(() => debounce((params: any) => apiUpdateBillStatus(params), 1000), []);
+  const debouncedUpdateBillStatus = useMemo(() => debounce((params: any, options) => apiUpdateBillStatus(params, options), 1000), []);
   const debouncedfinshedPaymentCash = useMemo(() => debounce((params: any, options) => apiFnishedPaymentCash(params, options), 1000), []);
   const debouncedCreatePaymentTransfer = useMemo(() => debounce((params: any) => apiCreatePaymentTransfer(params), 1000), []);
   const debouncedChangeBox = useMemo(() => debounce((params: any, options) => apiChangeBox(params, options), 1000), []);
@@ -104,8 +105,10 @@ function RoomView() {
       await apiGetBoxs();
       await apiGetPrices();
       await apiGetDishs();
+      await apiGetTimeMinutes(null, {
+        onSuccess: setTimeMinute,
+      });
     }
-    setTimeMinute(dayjs().tz(TZ_VN).valueOf());
     run();
   }, []);
 
@@ -333,25 +336,6 @@ function RoomView() {
 
   const handleClickActiveRule = async (rule: Rule) => {
     if (!selectedRoom) return;
-
-    const roomsUpdateStatus: Room[] = rooms.map((room: Room) => {
-      if (room.id === selectedRoom.id) {
-        room.using = true;
-        const start = room.start || dayjs().tz(TZ_VN).toDate();
-        room.start = typeof start === "number" ? new Date(start) : start;
-
-        const minutes = calculateMinutesRounded(typeof room.start === "number" ? room.start : new Date(room.start).getTime(), typeof timeMinute === "number" ? timeMinute : timeMinute.getTime());
-
-        rule.total = calculatePrice(minutes, rule.pricePerHour);
-        room.priceRule = rule;
-        room.total = room.orders ? rule.total + room.orders.reduce((sum: number, order: Order) => sum + (order.total || 0), 0) : rule.total;
-      }
-
-      return room;
-    });
-
-    setRooms(roomsUpdateStatus);
-
     apiCreateBill(
       {
         boxId: selectedRoom.id,
@@ -367,6 +351,25 @@ function RoomView() {
             type: "error",
             message: "Thêm giờ không thành công. Vui lòng thử lại.",
           });
+        },
+        onSuccess: (data: any) => {
+          const roomsUpdateStatus: Room[] = rooms.map((room: Room) => {
+            if (room.id === selectedRoom.id) {
+              room.using = true;
+              const start = room.start || data.start;
+              room.start = typeof start === "number" ? new Date(start) : start;
+
+              const minutes = calculateMinutesRounded(typeof room.start === "number" ? room.start : new Date(room.start || 0).getTime(), typeof timeMinute === "number" ? timeMinute : timeMinute.getTime());
+
+              rule.total = calculatePrice(minutes, rule.pricePerHour);
+              room.priceRule = rule;
+              room.total = room.orders ? rule.total + room.orders.reduce((sum: number, order: Order) => sum + (order.total || 0), 0) : rule.total;
+            }
+
+            return room;
+          });
+
+          setRooms(roomsUpdateStatus);
         },
       }
     );
@@ -396,17 +399,21 @@ function RoomView() {
     if (!selectedRoom) return;
     if (!existRoom) return;
 
-    existRoom.billStatus = "PAYING";
-    existRoom.end = dayjs(timeMinute).tz(TZ_VN).toDate();
-
-    setRooms([...rooms]);
-
-    debouncedUpdateBillStatus({
-      boxId: existRoom.id,
-      data: {
-        status: "PAYING",
+    debouncedUpdateBillStatus(
+      {
+        boxId: existRoom.id,
+        data: {
+          status: "PAYING",
+        },
       },
-    });
+      {
+        onSuccess: (data: any) => {
+          existRoom.billStatus = "PAYING";
+          existRoom.end = data.end;
+          setRooms([...rooms]);
+        },
+      }
+    );
   };
 
   function clearBox(room: Room) {

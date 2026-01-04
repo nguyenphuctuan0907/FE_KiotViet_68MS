@@ -13,6 +13,7 @@ export const payosService = {
 
 export const boxsService = {
   getBoxs: Object.assign(() => baseService.get("/box"), { method: "GET" }),
+  getTimeMinutes: Object.assign(() => baseService.get("/box/time-minutes"), { method: "GET" }),
   createBillUpsert: Object.assign((data: any) => baseService.post("/box/upsert-status", data), { method: "POST" }),
   changeBox: Object.assign((data: any) => baseService.put("/box/change-box", data), { method: "PUT" }),
 };
