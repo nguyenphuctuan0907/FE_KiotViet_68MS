@@ -1,5 +1,6 @@
 // RoomView.tsx
 import React, { useEffect, useState, useRef, useMemo } from "react";
+import DatePicker from "react-datepicker";
 import { Search, ShoppingCart, Bell, Pause, SkipForward, TrashIcon } from "lucide-react";
 import { calculateHoursRounded, calculateMinutesRounded, calculatePrice, debounce, getActiveAndNextRules, groupByType, swapObjectsInPlace, type Rule } from "../common";
 import { useRobustSocket } from "../hooks/useSocket";
@@ -28,6 +29,7 @@ interface Room {
   discountType?: "VND" | "PERCENT";
   discountAmount?: number;
   discountPercent?: number;
+  bill?: any[];
 }
 
 interface Order {
@@ -42,7 +44,7 @@ interface Order {
 
 function RoomView() {
   const { socket, isConnected } = useRobustSocket({
-    url: import.meta.env.VITE_URL_SOCKET || "https://2100f44af705.ngrok-free.app",
+    url: import.meta.env.VITE_URL_SOCKET || "https://f5ed5c2b9806.ngrok-free.app",
     heartbeatInterval: 30000, // 30 giây
     maxReconnectAttempts: 20,
   });
@@ -59,6 +61,7 @@ function RoomView() {
   const [itemDelete, setItemDelete] = useState<Order | null>(null);
   const [openPopupDiscount, setOpenPopupDiscount] = useState<boolean>(false);
   const [type, setType] = useState<"VND" | "PERCENT">("VND");
+  const [time, setTime] = useState<Date | null>(null);
 
   const showAlert = useAlert();
 
@@ -72,6 +75,7 @@ function RoomView() {
   const { callApi: apiFnishedPaymentCash, loading: loadingPaymentCash } = useApi<any>(billService.finishedPayment);
   const { callApi: apiCancelPayment } = useApi<any>(billService.cancelPayment);
   const { callApi: apiUpdateDiscountBill } = useApi<any>(billService.updateDiscountBill);
+  const { callApi: apiChangeTimeStart } = useApi<any>(billService.changeTimeStart);
   const { callApi: apiClearDiscountBill, loading: loadingClearDiscountBill } = useApi<any>(billService.clearDiscountBill);
   const { callApi: apiChangeBox, loading: loadingChangeBox } = useApi<any>(boxsService.changeBox);
   const { callApi: apiGetTimeMinutes } = useApi<any>(boxsService.getTimeMinutes);
@@ -86,6 +90,7 @@ function RoomView() {
 
   const existRoom = selectedRoom ? rooms.find((room) => room.id === selectedRoom.id) : null;
   const orders = groupByType(resDishs);
+  console.log({ time });
 
   useEffect(() => {
     const onVisibility = () => {
@@ -292,6 +297,16 @@ function RoomView() {
             message: "Thêm đồ không thành công. Vui lòng thử lại.",
           });
         },
+        onSuccess: () => {
+          if (findRoom.billStatus === "PAYING") {
+            debouncedCreatePaymentTransfer({
+              amount: findRoom.total || 0,
+              cancelUrl: "",
+              returnUrl: "",
+              boxId: findRoom.id,
+            });
+          }
+        },
       }
     );
   };
@@ -328,6 +343,16 @@ function RoomView() {
             type: "error",
             message: "Thêm đồ không thành công. Vui lòng thử lại.",
           });
+        },
+        onSuccess: () => {
+          if (findRoom.billStatus === "PAYING") {
+            apiCreatePaymentTransfer({
+              amount: findRoom.total || 0,
+              cancelUrl: "",
+              returnUrl: "",
+              boxId: findRoom.id,
+            });
+          }
         },
       }
     );
@@ -498,6 +523,16 @@ function RoomView() {
             message: "Xóa đồ không thành công. Vui lòng thử lại.",
           });
         },
+        onSuccess: () => {
+          if (room.billStatus === "PAYING") {
+            apiCreatePaymentTransfer({
+              amount: room.total || 0,
+              cancelUrl: "",
+              returnUrl: "",
+              boxId: room.id,
+            });
+          }
+        },
       }
     );
   };
@@ -643,7 +678,12 @@ function RoomView() {
       },
       {
         onSuccess: () => {
-          const minutes = calculateMinutesRounded(typeof room.start === "number" ? room.start : new Date(room.start || 0).getTime(), typeof timeMinute === "number" ? timeMinute : timeMinute.getTime());
+          const startMs = typeof room.start === "number" ? room.start : new Date(room.start || 0).getTime();
+
+          const endMs = room.end ? new Date(room.end).getTime() : typeof timeMinute === "number" ? timeMinute : timeMinute.getTime();
+
+          const minutes = calculateMinutesRounded(startMs, endMs);
+
           const totalPrice = calculatePrice(minutes, newTotalDiscount);
           room.priceRule && (room.priceRule.total = totalPrice);
 
@@ -654,6 +694,16 @@ function RoomView() {
             type: "success",
             message: "Cập nhật giảm giá thành công",
           });
+
+          if (room.billStatus === "PAYING") {
+            apiCreatePaymentTransfer({
+              amount: room.total || 0,
+              cancelUrl: "",
+              returnUrl: "",
+              boxId: room.id,
+            });
+          }
+
           return;
         },
         onError: () => {
@@ -681,7 +731,13 @@ function RoomView() {
           room.discountType = undefined;
           room.discountAmount = undefined;
           room.discountPercent = undefined;
-          const minutes = calculateMinutesRounded(typeof room.start === "number" ? room.start : new Date(room.start || 0).getTime(), typeof timeMinute === "number" ? timeMinute : timeMinute.getTime());
+
+          const startMs = typeof room.start === "number" ? room.start : new Date(room.start || 0).getTime();
+
+          const endMs = room.end ? new Date(room.end).getTime() : typeof timeMinute === "number" ? timeMinute : timeMinute.getTime();
+
+          const minutes = calculateMinutesRounded(startMs, endMs);
+
           const priceTotal = calculatePrice(minutes, room.priceRule?.pricePerHour || 0);
           room.priceRule && (room.priceRule!.total = priceTotal);
           room.total = (priceTotal || 0) + (room.orders ? room.orders.reduce((sum: number, order: Order) => sum + (order.total || 0), 0) : 0);
@@ -697,6 +753,44 @@ function RoomView() {
             type: "error",
             message: "Xóa giảm giá không thành công. Vui lòng thử lại.",
           });
+        },
+      }
+    );
+  };
+
+  const handleClickChangeTime = (time: Date | null) => {
+    if (!existRoom || !time) return;
+    setTime(time);
+
+    apiChangeTimeStart(
+      {
+        boxId: existRoom.id,
+        start: time,
+      },
+      {
+        onSuccess: (bill) => {
+          // update lại tiền phòng
+          const room = rooms.find((r) => r.id === existRoom.id);
+          if (!room) return;
+
+          const billInfo = buildBillInfo(bill, timeMinute);
+          room.start = bill.start;
+          room.end = bill.end;
+          room.billStatus = bill.status;
+          room.priceRule = billInfo.priceRule;
+          room.minutes = billInfo.minutes;
+          room.total = billInfo.total;
+          setRooms([...rooms]);
+
+          if (bill.status === "PAYING") {
+            // gen lại qr code;
+            apiCreatePaymentTransfer({
+              amount: room.total || 0,
+              cancelUrl: "",
+              returnUrl: "",
+              boxId: room.id,
+            });
+          }
         },
       }
     );
@@ -763,6 +857,23 @@ function RoomView() {
                         </div>
                       ))}
                   </div>
+                  <div>
+                    <h2 className="text-lg font-bold mt-4 mb-2">Tất cả</h2>
+                    <div className="grid grid-cols-7 gap-4 p-4 overflow-y-auto ">
+                      {resPrices &&
+                        resPrices.map((rule: Rule) => (
+                          <div
+                            key={rule.id}
+                            className={`cursor-pointer h-24 rounded-2xl 
+                    border relative flex flex-col items-center justify-center shadow-sm transition hover:shadow-lg`}
+                            onClick={() => handleClickActiveRule(rule)}
+                          >
+                            <div className="text-sm font-semibold">{rule.pricePerHour.toLocaleString()}</div>
+                            <div className="text-xs font-semibold">{rule.name}</div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
                 </div>
                 <input type="radio" name="my_tabs_3" className="tab checked:bg-blue-500 checked:text-white font-bold text-sm" aria-label="🍶 Chọn món" />
                 <div className="tab-content border-amber-500 p-6 overflow-y-auto h-[800px]">
@@ -824,7 +935,12 @@ function RoomView() {
                   {existRoom?.priceRule && (
                     <div key={existRoom?.priceRule?.id} className="w-full px-4 py-2 border-b text-black mt-3">
                       <div className="flex justify-between items-center">
-                        <div className="font-bold ">{existRoom?.priceRule?.name}</div>
+                        <div className="font-bold">
+                          {existRoom?.priceRule?.name}
+                          <div>
+                            <DatePicker className="text-green-600 cursor-pointer" onChange={handleClickChangeTime} selected={time || existRoom?.start} showTimeSelect timeIntervals={15} timeFormat="HH:mm" dateFormat="HH:mm" />
+                          </div>
+                        </div>
                         <div className="flex items-center gap-1 border-2 p-2 rounded-2xl">
                           <span className="cursor-pointer">{existRoom?.end ? <SkipForward size={16} strokeWidth={2.5} /> : <Pause size={16} strokeWidth={2.5} />}</span>
                           <span className="font-bold ml-4">{calculateHoursRounded(existRoom?.minutes ?? 0)}</span>

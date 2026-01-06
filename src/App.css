@@ -2,6 +2,7 @@
 @plugin "daisyui" {
   themes: light --default;
 }
+@import "react-datepicker/dist/react-datepicker.css";
 @theme {
   /* DaisyUI yêu cầu theme được define ở đây */
   /* --color-primary: #570df8;

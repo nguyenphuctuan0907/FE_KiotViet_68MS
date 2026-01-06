@@ -297,12 +297,13 @@ export const priceRules = [
 
 export function calculateMinutesRounded(startTime: number, endTime: number): number {
   console.log({ startTime, endTime });
-  if (!startTime || !endTime) return 0.001;
+  if (startTime == null || endTime == null) return 0.001;
   if (endTime <= startTime) {
     return 0.001;
   }
   // const diffInMs = endTime - startTime;
   // const minutes = diffInMs / (1000 * 60);
+  // return Math.ceil(minutes);
   return dayjs(endTime).diff(dayjs(startTime), "minute");
 }
 

@@ -36,4 +36,5 @@ export const billService = {
   cancelPayment: Object.assign((data: { boxId: number }) => baseService.put("/bill/payment", data), { method: "PUT" }),
   updateDiscountBill: Object.assign((data: { boxId: number }) => baseService.put("/bill/discount", data), { method: "PUT" }),
   clearDiscountBill: Object.assign((data: { boxId: number }) => baseService.put("/bill/discount/clear", data), { method: "PUT" }),
+  changeTimeStart: Object.assign((data: { boxId: number }) => baseService.put("/bill/time-start", data), { method: "PUT" }),
 };
