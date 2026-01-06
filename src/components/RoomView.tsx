@@ -12,6 +12,7 @@ import Button from "./Button";
 import { useAlert } from "../hooks/useAlert";
 import Loading from "./loading";
 import { useStateRef } from "../hooks/useStateRef";
+import dayjs from "dayjs";
 
 interface Room {
   id: number;
@@ -379,6 +380,7 @@ function RoomView() {
         onSuccess: (data: any) => {
           const roomsUpdateStatus: Room[] = rooms.map((room: Room) => {
             if (room.id === selectedRoom.id) {
+              console.log({ room, data, rule });
               room.using = true;
               const start = room.start || data.start;
               room.start = typeof start === "number" ? new Date(start) : start;
@@ -742,6 +744,16 @@ function RoomView() {
           room.priceRule && (room.priceRule!.total = priceTotal);
           room.total = (priceTotal || 0) + (room.orders ? room.orders.reduce((sum: number, order: Order) => sum + (order.total || 0), 0) : 0);
           setRooms([...rooms]);
+
+          if (room.billStatus === "PAYING") {
+            apiCreatePaymentTransfer({
+              amount: room.total || 0,
+              cancelUrl: "",
+              returnUrl: "",
+              boxId: room.id,
+            });
+          }
+
           showAlert({
             type: "success",
             message: "Xóa giảm giá thành công",
@@ -760,12 +772,14 @@ function RoomView() {
 
   const handleClickChangeTime = (time: Date | null) => {
     if (!existRoom || !time) return;
-    setTime(time);
+    const VN_TZ = "Asia/Ho_Chi_Minh";
+    const vnDayjs = dayjs(time).tz(VN_TZ, true);
+    setTime(vnDayjs.toDate());
 
     apiChangeTimeStart(
       {
         boxId: existRoom.id,
-        start: time,
+        start: vnDayjs.format(),
       },
       {
         onSuccess: (bill) => {
