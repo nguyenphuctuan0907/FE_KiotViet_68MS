@@ -951,9 +951,9 @@ function RoomView() {
                       <div className="flex justify-between items-center">
                         <div className="font-bold">
                           {existRoom?.priceRule?.name}
-                          <div>
+                          {/* <div>
                             <DatePicker className="text-green-600 cursor-pointer" onChange={handleClickChangeTime} selected={time || existRoom?.start} showTimeSelect timeIntervals={15} timeFormat="HH:mm" dateFormat="HH:mm" />
-                          </div>
+                          </div> */}
                         </div>
                         <div className="flex items-center gap-1 border-2 p-2 rounded-2xl">
                           <span className="cursor-pointer">{existRoom?.end ? <SkipForward size={16} strokeWidth={2.5} /> : <Pause size={16} strokeWidth={2.5} />}</span>
