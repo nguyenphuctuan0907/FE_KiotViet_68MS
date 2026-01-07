@@ -15,6 +15,7 @@ import { useStateRef } from "../hooks/useStateRef";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+const VN_TZ = "Asia/Ho_Chi_Minh";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -777,13 +778,12 @@ function RoomView() {
 
   const handleClickChangeTime = (time: Date | null) => {
     if (!existRoom || !time) return;
-    const ts = dayjs(time).valueOf();
-    setTime(new Date(ts));
+    setTime(time);
 
     apiChangeTimeStart(
       {
         boxId: existRoom.id,
-        start: ts,
+        start: dayjs(time).utc().valueOf(),
       },
       {
         onSuccess: (bill) => {
@@ -956,7 +956,7 @@ function RoomView() {
                         <div className="font-bold">
                           {existRoom?.priceRule?.name}
                           <div>
-                            <DatePicker className="text-green-600 cursor-pointer" onChange={handleClickChangeTime} selected={time ?? (existRoom?.start ? new Date(existRoom.start) : null)} showTimeSelect timeIntervals={15} timeFormat="HH:mm" dateFormat="HH:mm" />
+                            <DatePicker className="text-green-600 cursor-pointer" onChange={handleClickChangeTime} selected={time ?? (existRoom?.start ? dayjs(existRoom.start).tz(VN_TZ).toDate() : null)} showTimeSelect timeIntervals={15} timeFormat="HH:mm" dateFormat="HH:mm" />
                           </div>
                         </div>
                         <div className="flex items-center gap-1 border-2 p-2 rounded-2xl">
