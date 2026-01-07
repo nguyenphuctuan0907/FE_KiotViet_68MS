@@ -1,6 +1,6 @@
 // RoomView.tsx
 import React, { useEffect, useState, useRef, useMemo } from "react";
-// import DatePicker from "react-datepicker";
+import DatePicker from "react-datepicker";
 import { Search, ShoppingCart, Bell, Pause, SkipForward, TrashIcon } from "lucide-react";
 import { calculateHoursRounded, calculateMinutesRounded, calculatePrice, debounce, getActiveAndNextRules, groupByType, swapObjectsInPlace, type Rule } from "../common";
 import { useRobustSocket } from "../hooks/useSocket";
@@ -12,7 +12,12 @@ import Button from "./Button";
 import { useAlert } from "../hooks/useAlert";
 import Loading from "./loading";
 import { useStateRef } from "../hooks/useStateRef";
-// import dayjs from "dayjs";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface Room {
   id: number;
@@ -45,7 +50,7 @@ interface Order {
 
 function RoomView() {
   const { socket, isConnected } = useRobustSocket({
-    url: import.meta.env.VITE_URL_SOCKET || "https://f5ed5c2b9806.ngrok-free.app",
+    url: import.meta.env.VITE_URL_SOCKET || "https://5dfdb04cf01d.ngrok-free.app",
     heartbeatInterval: 30000, // 30 giây
     maxReconnectAttempts: 20,
   });
@@ -62,7 +67,7 @@ function RoomView() {
   const [itemDelete, setItemDelete] = useState<Order | null>(null);
   const [openPopupDiscount, setOpenPopupDiscount] = useState<boolean>(false);
   const [type, setType] = useState<"VND" | "PERCENT">("VND");
-  // const [time, setTime] = useState<Date | null>(null);
+  const [time, setTime] = useState<Date | null>(null);
 
   const showAlert = useAlert();
 
@@ -76,7 +81,7 @@ function RoomView() {
   const { callApi: apiFnishedPaymentCash, loading: loadingPaymentCash } = useApi<any>(billService.finishedPayment);
   const { callApi: apiCancelPayment } = useApi<any>(billService.cancelPayment);
   const { callApi: apiUpdateDiscountBill } = useApi<any>(billService.updateDiscountBill);
-  // const { callApi: apiChangeTimeStart } = useApi<any>(billService.changeTimeStart);
+  const { callApi: apiChangeTimeStart } = useApi<any>(billService.changeTimeStart);
   const { callApi: apiClearDiscountBill, loading: loadingClearDiscountBill } = useApi<any>(billService.clearDiscountBill);
   const { callApi: apiChangeBox, loading: loadingChangeBox } = useApi<any>(boxsService.changeBox);
   const { callApi: apiGetTimeMinutes } = useApi<any>(boxsService.getTimeMinutes);
@@ -91,6 +96,7 @@ function RoomView() {
 
   const existRoom = selectedRoom ? rooms.find((room) => room.id === selectedRoom.id) : null;
   const orders = groupByType(resDishs);
+  console.log({ time });
 
   useEffect(() => {
     const onVisibility = () => {
@@ -769,45 +775,45 @@ function RoomView() {
     );
   };
 
-  // const handleClickChangeTime = (time: Date | null) => {
-  //   if (!existRoom || !time) return;
-  //   const VN_TZ = "Asia/Ho_Chi_Minh";
-  //   const vnDayjs = dayjs(time).tz(VN_TZ, true);
-  //   setTime(vnDayjs.toDate());
+  const handleClickChangeTime = (time: Date | null) => {
+    if (!existRoom || !time) return;
+    const VN_TZ = "Asia/Ho_Chi_Minh";
+    const vnDayjs = dayjs(time).tz(VN_TZ, true);
+    setTime(vnDayjs.toDate());
 
-  //   apiChangeTimeStart(
-  //     {
-  //       boxId: existRoom.id,
-  //       start: vnDayjs.format(),
-  //     },
-  //     {
-  //       onSuccess: (bill) => {
-  //         // update lại tiền phòng
-  //         const room = rooms.find((r) => r.id === existRoom.id);
-  //         if (!room) return;
+    apiChangeTimeStart(
+      {
+        boxId: existRoom.id,
+        start: vnDayjs.format(),
+      },
+      {
+        onSuccess: (bill) => {
+          // update lại tiền phòng
+          const room = rooms.find((r) => r.id === existRoom.id);
+          if (!room) return;
 
-  //         const billInfo = buildBillInfo(bill, timeMinute);
-  //         room.start = bill.start;
-  //         room.end = bill.end;
-  //         room.billStatus = bill.status;
-  //         room.priceRule = billInfo.priceRule;
-  //         room.minutes = billInfo.minutes;
-  //         room.total = billInfo.total;
-  //         setRooms([...rooms]);
+          const billInfo = buildBillInfo(bill, timeMinute);
+          room.start = bill.start;
+          room.end = bill.end;
+          room.billStatus = bill.status;
+          room.priceRule = billInfo.priceRule;
+          room.minutes = billInfo.minutes;
+          room.total = billInfo.total;
+          setRooms([...rooms]);
 
-  //         if (bill.status === "PAYING") {
-  //           // gen lại qr code;
-  //           apiCreatePaymentTransfer({
-  //             amount: room.total || 0,
-  //             cancelUrl: "",
-  //             returnUrl: "",
-  //             boxId: room.id,
-  //           });
-  //         }
-  //       },
-  //     }
-  //   );
-  // };
+          if (bill.status === "PAYING") {
+            // gen lại qr code;
+            apiCreatePaymentTransfer({
+              amount: room.total || 0,
+              cancelUrl: "",
+              returnUrl: "",
+              boxId: room.id,
+            });
+          }
+        },
+      }
+    );
+  };
 
   return (
     <div>
@@ -950,9 +956,9 @@ function RoomView() {
                       <div className="flex justify-between items-center">
                         <div className="font-bold">
                           {existRoom?.priceRule?.name}
-                          {/* <div>
+                          <div>
                             <DatePicker className="text-green-600 cursor-pointer" onChange={handleClickChangeTime} selected={time || existRoom?.start} showTimeSelect timeIntervals={15} timeFormat="HH:mm" dateFormat="HH:mm" />
-                          </div> */}
+                          </div>
                         </div>
                         <div className="flex items-center gap-1 border-2 p-2 rounded-2xl">
                           <span className="cursor-pointer">{existRoom?.end ? <SkipForward size={16} strokeWidth={2.5} /> : <Pause size={16} strokeWidth={2.5} />}</span>
