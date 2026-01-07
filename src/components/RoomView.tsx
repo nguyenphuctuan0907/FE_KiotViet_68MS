@@ -956,7 +956,7 @@ function RoomView() {
                         <div className="font-bold">
                           {existRoom?.priceRule?.name}
                           <div>
-                            <DatePicker className="text-green-600 cursor-pointer" onChange={handleClickChangeTime} selected={time || existRoom?.start} showTimeSelect timeIntervals={15} timeFormat="HH:mm" dateFormat="HH:mm" />
+                            <DatePicker className="text-green-600 cursor-pointer" onChange={handleClickChangeTime} selected={time ?? (existRoom?.start ? new Date(existRoom.start) : null)} showTimeSelect timeIntervals={15} timeFormat="HH:mm" dateFormat="HH:mm" />
                           </div>
                         </div>
                         <div className="flex items-center gap-1 border-2 p-2 rounded-2xl">
