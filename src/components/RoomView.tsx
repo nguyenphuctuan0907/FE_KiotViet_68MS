@@ -778,13 +778,13 @@ function RoomView() {
   const handleClickChangeTime = (time: Date | null) => {
     if (!existRoom || !time) return;
     const VN_TZ = "Asia/Ho_Chi_Minh";
-    const vnDayjs = dayjs(time).tz(VN_TZ, true);
-    setTime(vnDayjs.toDate());
+    const ts = dayjs(time).valueOf();
+    setTime(new Date(ts));
 
     apiChangeTimeStart(
       {
         boxId: existRoom.id,
-        start: vnDayjs.format(),
+        start: ts,
       },
       {
         onSuccess: (bill) => {
