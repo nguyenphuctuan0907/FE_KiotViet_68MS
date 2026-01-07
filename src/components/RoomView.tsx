@@ -777,7 +777,6 @@ function RoomView() {
 
   const handleClickChangeTime = (time: Date | null) => {
     if (!existRoom || !time) return;
-    const VN_TZ = "Asia/Ho_Chi_Minh";
     const ts = dayjs(time).valueOf();
     setTime(new Date(ts));
 
