@@ -49,6 +49,8 @@ interface Order {
   dishId?: number;
 }
 
+type TimeMap = Record<number, Date>;
+
 function RoomView() {
   const { socket, isConnected } = useRobustSocket({
     url: import.meta.env.VITE_URL_SOCKET || "https://5dfdb04cf01d.ngrok-free.app",
@@ -68,7 +70,7 @@ function RoomView() {
   const [itemDelete, setItemDelete] = useState<Order | null>(null);
   const [openPopupDiscount, setOpenPopupDiscount] = useState<boolean>(false);
   const [type, setType] = useState<"VND" | "PERCENT">("VND");
-  const [time, setTime] = useState<Date | null>(null);
+  const [roomTimes, setRoomTimes] = useState<TimeMap>({});
 
   const showAlert = useAlert();
 
@@ -97,7 +99,6 @@ function RoomView() {
 
   const existRoom = selectedRoom ? rooms.find((room) => room.id === selectedRoom.id) : null;
   const orders = groupByType(resDishs);
-  console.log({ time });
 
   useEffect(() => {
     const onVisibility = () => {
@@ -190,7 +191,16 @@ function RoomView() {
       };
     });
 
+    const nextTimes: TimeMap = {};
+
+    mappedRooms.forEach((room) => {
+      if (room.start) {
+        nextTimes[room.id] = dayjs(room.start).tz(VN_TZ).toDate();
+      }
+    });
+
     setRooms(mappedRooms);
+    setRoomTimes(nextTimes);
   }, [resBoxs]);
 
   useEffect(() => {
@@ -400,6 +410,13 @@ function RoomView() {
 
             return room;
           });
+
+          setRoomTimes((prev) => ({
+            ...prev,
+            [selectedRoom.id]: dayjs(roomsUpdateStatus.find((room) => room.id === selectedRoom.id)?.start)
+              .tz(VN_TZ)
+              .toDate(),
+          }));
 
           setRooms(roomsUpdateStatus);
         },
@@ -778,7 +795,10 @@ function RoomView() {
 
   const handleClickChangeTime = (time: Date | null) => {
     if (!existRoom || !time) return;
-    setTime(time);
+    setRoomTimes((prev) => ({
+      ...prev,
+      [existRoom.id]: time,
+    }));
 
     apiChangeTimeStart(
       {
@@ -956,7 +976,7 @@ function RoomView() {
                         <div className="font-bold">
                           {existRoom?.priceRule?.name}
                           <div>
-                            <DatePicker className="text-green-600 cursor-pointer" onChange={handleClickChangeTime} selected={time ?? (existRoom?.start ? dayjs(existRoom.start).tz(VN_TZ).toDate() : null)} showTimeSelect timeIntervals={15} timeFormat="HH:mm" dateFormat="HH:mm" />
+                            <DatePicker className="text-green-600 cursor-pointer" onChange={handleClickChangeTime} selected={roomTimes[existRoom?.id]} showTimeSelect timeIntervals={15} timeFormat="HH:mm" dateFormat="HH:mm" />
                           </div>
                         </div>
                         <div className="flex items-center gap-1 border-2 p-2 rounded-2xl">
