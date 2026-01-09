@@ -53,7 +53,7 @@ type TimeMap = Record<number, Date>;
 
 function RoomView() {
   const { socket, isConnected } = useRobustSocket({
-    url: import.meta.env.VITE_URL_SOCKET || "https://5dfdb04cf01d.ngrok-free.app",
+    url: import.meta.env.VITE_URL_SOCKET || "https://cf4213d69781.ngrok-free.app",
     heartbeatInterval: 30000, // 30 giây
     maxReconnectAttempts: 20,
   });
@@ -1066,6 +1066,7 @@ function RoomView() {
                           <PayOSQrBox loading={loadingTransfer} checkoutUrl={existRoom?.qrCodeUrl || ""} />
                           {existRoom?.qrCodeUrl && (
                             <div>
+                              <div className="text-2xl font-bold text-amber-600 mt-4 mb-4">ACB - 5294671</div>
                               <div>
                                 <Button onClick={handleRecreateQr}>Tạo lại mã QR</Button>
                                 <span> Nếu bạn thay đổi số lượng order hoặc lỗi tạo mã.</span>
