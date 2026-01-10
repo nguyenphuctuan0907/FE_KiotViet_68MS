@@ -410,15 +410,13 @@ function RoomView() {
 
             return room;
           });
-
+          setRooms(roomsUpdateStatus);
           setRoomTimes((prev) => ({
             ...prev,
             [selectedRoom.id]: dayjs(roomsUpdateStatus.find((room) => room.id === selectedRoom.id)?.start)
               .tz(VN_TZ)
               .toDate(),
           }));
-
-          setRooms(roomsUpdateStatus);
         },
       }
     );
@@ -629,6 +627,7 @@ function RoomView() {
           if (!currentRoom) return;
           swapObjectsInPlace(currentRoom, room, ["using", "end", "minutes", "orders", "priceRule", "qrCodeUrl", "start", "status", "total", "discountAmount", "discountPercent", "discountType", "billStatus"]);
           setRooms([...rooms]);
+          setRoomTimes((prev) => ({ ...prev, [room.id]: room.start || new Date(), [currentRoom.id]: currentRoom.start || new Date() }));
           setSelectedRoom(room);
           showAlert({
             type: "success",
