@@ -24,7 +24,7 @@ export const BillHistory: React.FC = () => {
   useEffect(() => {
     // Fetch bills from API
     apiGetBoxs({
-      date: new Date().toISOString().split("T")[0],
+      date: dayjs(new Date()).format("YYYY-MM-DD"),
     });
   }, []);
 
@@ -38,7 +38,7 @@ export const BillHistory: React.FC = () => {
     if (date) {
       setSelectedDate(date);
       apiGetBoxs({
-        date: new Date(date).toISOString().split("T")[0],
+        date: dayjs(date).format("YYYY-MM-DD"),
       });
     }
   };
@@ -46,7 +46,7 @@ export const BillHistory: React.FC = () => {
   const handleSearch = () => {
     if (selectedDate) {
       apiGetBoxs({
-        date: new Date(selectedDate).toISOString().split("T")[0],
+        date: dayjs(selectedDate).format("YYYY-MM-DD"),
       });
     }
   };
@@ -57,6 +57,7 @@ export const BillHistory: React.FC = () => {
       timeZone: "Asia/Ho_Chi_Minh",
     });
   };
+
   const exportBillsToExcel = (bills: Bill[]) => {
     const data = bills.map((bill, index) => ({
       STT: index + 1,
