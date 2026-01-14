@@ -15,6 +15,7 @@ import { useStateRef } from "../hooks/useStateRef";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { BillHistory } from "./BillHistory";
 const VN_TZ = "Asia/Ho_Chi_Minh";
 
 dayjs.extend(utc);
@@ -53,7 +54,7 @@ type TimeMap = Record<number, Date>;
 
 function RoomView() {
   const { socket, isConnected } = useRobustSocket({
-    url: import.meta.env.VITE_URL_SOCKET || "https://cf4213d69781.ngrok-free.app",
+    url: import.meta.env.VITE_URL_SOCKET || "https://318c0d622b59.ngrok-free.app",
     heartbeatInterval: 30000, // 30 giây
     maxReconnectAttempts: 20,
   });
@@ -528,10 +529,6 @@ function RoomView() {
       }
     }
 
-    setRooms([...rooms]);
-    setIsOpenDelete(false);
-    setItemDelete(null);
-
     debouncedDeleteBillDish(
       {
         boxId: selectedRoom?.id,
@@ -547,6 +544,9 @@ function RoomView() {
           });
         },
         onSuccess: () => {
+          setRooms([...rooms]);
+          setIsOpenDelete(false);
+          setItemDelete(null);
           if (room.billStatus === "PAYING") {
             apiCreatePaymentTransfer({
               amount: room.total || 0,
@@ -564,12 +564,6 @@ function RoomView() {
     const room = rooms.find((room) => room.id === selectedRoom?.id);
     if (!room) return;
     if (room.billStatus === "PAYING") {
-      room.end = undefined;
-      room.billStatus = room.priceRule?.id ? "RUNNING" : "DRAFT";
-      room.qrCodeUrl = undefined;
-
-      setRooms([...rooms]);
-
       apiCancelPayment(
         {
           boxId: room.id,
@@ -581,6 +575,13 @@ function RoomView() {
               type: "error",
               message: "Hủy thanh toán không thành công. Vui lòng thử lại.",
             });
+          },
+          onSuccess: () => {
+            room.end = undefined;
+            room.billStatus = room.priceRule?.id ? "RUNNING" : "DRAFT";
+            room.qrCodeUrl = undefined;
+
+            setRooms([...rooms]);
           },
         }
       );
@@ -837,11 +838,11 @@ function RoomView() {
     <div>
       {loadingPaymentCash && <Loading />}
       <div className="w-screen h-screen flex text-red-800 select-none">
-        <div className="w-3/5 border-r">
+        <div className="w-full md:w-3/5 border-r">
           <div className="tabs tabs-lift h-full bg-[#f4f7fc]">
             <input type="radio" name="my_tabs" role="tab" className="tab checked:bg-blue-600 checked:text-white font-bold text-lg" aria-label="🌟 Phòng bàn" defaultChecked />
             <div className="tab-content bg-[#f4f7fc] border-base-300 p-6">
-              <div className="grid grid-cols-7 gap-4 p-4 overflow-y-auto ">
+              <div className="grid grid-cols-2 md:grid-cols-7 gap-4 p-4 overflow-y-auto ">
                 {rooms.map((room) => (
                   <div key={room.id} onClick={() => setSelectedRoom(room)} className={`cursor-pointer h-24 rounded-2xl border relative flex flex-col items-center justify-end shadow-sm transition hover:shadow-lg ${selectedRoom?.id === room.id ? "bg-blue-500 text-white border-blue-600" : room.using ? "bg-blue-50 border-blue-300" : "bg-gray-50 border-gray-300"}`}>
                     {room.using && (
@@ -874,13 +875,13 @@ function RoomView() {
                 ))}
               </div>
             </div>
-            <input type="radio" name="my_tabs" role="tab" className="tab checked:bg-blue-600 checked:text-white font-bold text-lg" aria-label="🥂 Thực đơn" />
+            <input type="radio" name="my_tabs" role="tab" className="tab checked:bg-blue-600 checked:text-white font-bold text-lg hidden md:block" aria-label="🥂 Thực đơn" />
             <div className="tab-content border-base-300 p-6">
               <div className="tabs tabs-lift h-full">
                 <input type="radio" name="my_tabs_3" className="tab checked:bg-blue-500 checked:text-white font-bold text-sm" aria-label="⌛ Giá giờ hát" defaultChecked />
 
                 <div className="tab-content border-base-300 p-6">
-                  <div className="grid grid-cols-7 gap-4 p-4 overflow-y-auto ">
+                  <div className="grid grid-cols-7 gap-4 p-4 overflow-y-auto">
                     {resPrices &&
                       getActiveAndNextRules(resPrices).active.map((rule: Rule) => (
                         <div
@@ -933,10 +934,15 @@ function RoomView() {
                 </div>
               </div>
             </div>
+
+            <input type="radio" name="my_tabs" role="tab" className="tab checked:bg-blue-600 checked:text-white font-bold text-lg hidden md:block" aria-label="💴 Hoá đơn" />
+            <div className="tab-content bg-[#f4f7fc] border-base-300 p-6">
+              <BillHistory />
+            </div>
           </div>
         </div>
 
-        <div className="w-2/5 flex flex-col bg-white shadow-xl">
+        <div className="w-2/5 hidden md:flex flex-col bg-white shadow-xl">
           <div className="h-14 border-b flex items-center justify-between px-4 bg-white">
             <div className="flex items-center gap-2 text-lg font-semibold">
               <ShoppingCart size={35} />
