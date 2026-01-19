@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { priceRules } from '../common';
+import React from 'react';
 
 // Định nghĩa kiểu dữ liệu cho Price Rule
 interface PriceRule {
@@ -20,8 +19,6 @@ interface PriceListProps {
 }
 
 const PriceList: React.FC<PriceListProps> = ({ priceRules = [], handleClickActiveRule, existRoom }) => {
-  const [selectedPrice, setSelectedPrice] = useState<PriceRule | null>(null);
-
   // Cấu hình các cột Box
   const boxes = [
     { label: 'BOX', sub: '( 1 PEOPLE )', min: 1 },
