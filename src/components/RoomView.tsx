@@ -16,6 +16,8 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { BillHistory } from "./BillHistory";
+import SingleRoom from "./SingleRoom";
+import PriceList from "./PriceList";
 const VN_TZ = "Asia/Ho_Chi_Minh";
 
 dayjs.extend(utc);
@@ -54,7 +56,7 @@ type TimeMap = Record<number, Date>;
 
 function RoomView() {
   const { socket, isConnected } = useRobustSocket({
-    url: import.meta.env.VITE_URL_SOCKET || "https://318c0d622b59.ngrok-free.app",
+    url: import.meta.env.VITE_URL_SOCKET || "https://68d5ab651363.ngrok-free.app",
     heartbeatInterval: 30000, // 30 giây
     maxReconnectAttempts: 20,
   });
@@ -100,6 +102,7 @@ function RoomView() {
 
   const existRoom = selectedRoom ? rooms.find((room) => room.id === selectedRoom.id) : null;
   const orders = groupByType(resDishs);
+  const countOcupiedRooms = rooms.filter((room) => room.using).length;
 
   useEffect(() => {
     const onVisibility = () => {
@@ -397,7 +400,6 @@ function RoomView() {
         onSuccess: (data: any) => {
           const roomsUpdateStatus: Room[] = rooms.map((room: Room) => {
             if (room.id === selectedRoom.id) {
-              console.log({ room, data, rule });
               room.using = true;
               const start = room.start || data.start;
               room.start = typeof start === "number" ? new Date(start) : start;
@@ -838,50 +840,27 @@ function RoomView() {
     <div>
       {loadingPaymentCash && <Loading />}
       <div className="w-screen h-screen flex text-red-800 select-none">
-        <div className="w-full md:w-3/5 border-r">
-          <div className="tabs tabs-lift h-full bg-[#f4f7fc]">
-            <input type="radio" name="my_tabs" role="tab" className="tab checked:bg-blue-600 checked:text-white font-bold text-lg" aria-label="🌟 Phòng bàn" defaultChecked />
-            <div className="tab-content bg-[#f4f7fc] border-base-300 p-6">
-              <div className="grid grid-cols-2 md:grid-cols-7 gap-4 p-4 overflow-y-auto ">
+        <div className="w-full md:w-3/5 border-r bg-[#0A2B61]">
+          <div className="tabs h-[calc(100vh-15px)] ">
+            <input type="radio" name="my_tabs" role="tab" className="tab mt-2 ml-2 bg-linear-to-r from-[#056BE2] to-[#0F97F2] text-white font-bold text-md rounded-tl-[60px] rounded-tr-[200px] checked:bg-white checked:bg-none checked:text-black" aria-label="🌟 PHÒNG BÀN" defaultChecked />
+            <div className="tab-content bg-[#f4f7fc] p-6 ml-2 mr-1 rounded-tr-4xl rounded-tl-none">
+              <h1 className="font-bold">Tất cả ({countOcupiedRooms} /20)</h1>
+              <div className="grid grid-cols-2 md:grid-cols-7 gap-2 overflow-y-auto">
                 {rooms.map((room) => (
-                  <div key={room.id} onClick={() => setSelectedRoom(room)} className={`cursor-pointer h-24 rounded-2xl border relative flex flex-col items-center justify-end shadow-sm transition hover:shadow-lg ${selectedRoom?.id === room.id ? "bg-blue-500 text-white border-blue-600" : room.using ? "bg-blue-50 border-blue-300" : "bg-gray-50 border-gray-300"}`}>
-                    {room.using && (
-                      <div className="absolute top-2 text-[10px] font-medium opacity-90">
-                        {room.start && (
-                          <div className="flex gap-6">
-                            <span>
-                              💰<span className="text-sm">{room.total?.toLocaleString()}</span>đ
-                            </span>
-                            <span>
-                              🕐<span className="text-sm">{room.minutes}</span>m
-                            </span>
-                          </div>
-                        )}
-                        {(room.orders?.length ?? 0) > 0 && (
-                          <div className="flex gap-6">
-                            <span>
-                              🍽️ <span className="text-sm font-light">{room.orders?.length}</span>
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="text-sm font-semibold items-end pb-3">
-                      {room.using && room.start && "🕒"}
-                      {room.name.toLocaleUpperCase()}
-                    </div>
-                  </div>
+                  <SingleRoom key={room.id} room={room} selectedRoom={selectedRoom} setSelectedRoom={setSelectedRoom} />
                 ))}
               </div>
             </div>
-            <input type="radio" name="my_tabs" role="tab" className="tab checked:bg-blue-600 checked:text-white font-bold text-lg hidden md:block" aria-label="🥂 Thực đơn" />
-            <div className="tab-content border-base-300 p-6">
+            {/* tab thực đơn */}
+            <input type="radio" name="my_tabs" role="tab" className="tab hidden md:flex items-center mt-2 bg-linear-to-r from-[#056BE2] to-[#0F97F2] text-white font-bold rounded-tl-[60px] rounded-tr-[200px] checked:bg-white checked:bg-none checked:text-black" aria-label="🥂 THỰC ĐƠN" />
+            <div className="tab-content bg-[#f4f7fc] ml-2 mr-1 p-6 rounded-tr-4xl rounded-tl-none">
+
               <div className="tabs tabs-lift h-full">
                 <input type="radio" name="my_tabs_3" className="tab checked:bg-blue-500 checked:text-white font-bold text-sm" aria-label="⌛ Giá giờ hát" defaultChecked />
 
-                <div className="tab-content border-base-300 p-6">
-                  <div className="grid grid-cols-7 gap-4 p-4 overflow-y-auto">
+                <div className="tab-content border-base-300 p-6 overflow-y-auto">
+                  <h1 className="text-md font-bold">⭐ GIÁ THEO KHUNG GIỜ</h1>
+                  <div className="grid grid-cols-7 gap-4 p-4">
                     {resPrices &&
                       getActiveAndNextRules(resPrices).active.map((rule: Rule) => (
                         <div
@@ -896,25 +875,12 @@ function RoomView() {
                       ))}
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold mt-4 mb-2">Tất cả</h2>
-                    <div className="grid grid-cols-7 gap-4 p-4 overflow-y-auto ">
-                      {resPrices &&
-                        resPrices.map((rule: Rule) => (
-                          <div
-                            key={rule.id}
-                            className={`cursor-pointer h-24 rounded-2xl 
-                    border relative flex flex-col items-center justify-center shadow-sm transition hover:shadow-lg`}
-                            onClick={() => handleClickActiveRule(rule)}
-                          >
-                            <div className="text-sm font-semibold">{rule.pricePerHour.toLocaleString()}</div>
-                            <div className="text-xs font-semibold">{rule.name}</div>
-                          </div>
-                        ))}
-                    </div>
+                    <h1 className="text-md font-bold mb-2">⭐ TẤT CẢ</h1>
+                    <PriceList priceRules={resPrices} handleClickActiveRule={handleClickActiveRule} existRoom={existRoom}/>
                   </div>
                 </div>
                 <input type="radio" name="my_tabs_3" className="tab checked:bg-blue-500 checked:text-white font-bold text-sm" aria-label="🍶 Chọn món" />
-                <div className="tab-content border-amber-500 p-6 overflow-y-auto h-[800px]">
+                <div className="tab-content border-amber-500 p-6 overflow-y-auto h-[780px]">
                   <div className="">
                     {Object.entries(orders).map(([type, items]) => (
                       <div key={type} className="menu-category">
@@ -935,8 +901,8 @@ function RoomView() {
               </div>
             </div>
 
-            <input type="radio" name="my_tabs" role="tab" className="tab checked:bg-blue-600 checked:text-white font-bold text-lg hidden md:block" aria-label="💴 Hoá đơn" />
-            <div className="tab-content bg-[#f4f7fc] border-base-300 p-6">
+            <input type="radio" name="my_tabs" role="tab" className="tab border-0 mt-2 bg-linear-to-r from-[#056BE2] to-[#0F97F2] text-white font-bold text-md rounded-tl-[60px] rounded-tr-[200px] checked:bg-white checked:bg-none checked:text-black hidden md:flex items-center" aria-label="💴 HÓA ĐƠN" />
+            <div className="tab-content bg-[#f4f7fc] ml-2 mr-1 p-6 rounded-tr-4xl rounded-tl-none">
               <BillHistory />
             </div>
           </div>
