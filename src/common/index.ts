@@ -372,3 +372,14 @@ export function swapObjectsInPlace<T extends Record<string, any>>(obj1: T, obj2:
     }
   });
 }
+
+  export const calculateDiscount = (type: "VND" | "PERCENT", numValue: number, pricePerHour: number) => {
+    let newTotal = 0;
+    if (type === "VND") {
+      newTotal = Math.max(0, (pricePerHour || 0) - numValue);
+    } else {
+      newTotal = Math.max(0, (pricePerHour || 0) * (1 - numValue / 100));
+    }
+
+    return newTotal;
+  };

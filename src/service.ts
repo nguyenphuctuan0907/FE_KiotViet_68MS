@@ -38,4 +38,5 @@ export const billService = {
   clearDiscountBill: Object.assign((data: { boxId: number }) => baseService.put("/bill/discount/clear", data), { method: "PUT" }),
   changeTimeStart: Object.assign((data: { boxId: number }) => baseService.put("/bill/time-start", data), { method: "PUT" }),
   getBills: Object.assign((data: { date: string }) => baseService.get(`/bill?date=${data.date}`), { method: "GET" }),
+  getBillById: Object.assign((data: { id: string }) => baseService.get(`/bill/${data.id}`), { method: "GET" }),
 };

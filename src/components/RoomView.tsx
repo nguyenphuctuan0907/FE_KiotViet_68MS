@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import DatePicker from "react-datepicker";
 import { Search, ShoppingCart, Bell, Pause, SkipForward, TrashIcon } from "lucide-react";
-import { calculateHoursRounded, calculateMinutesRounded, calculatePrice, debounce, getActiveAndNextRules, groupByType, swapObjectsInPlace, type Rule } from "../common";
+import { calculateDiscount, calculateHoursRounded, calculateMinutesRounded, calculatePrice, debounce, getActiveAndNextRules, groupByType, swapObjectsInPlace, type Rule } from "../common";
 import { useRobustSocket } from "../hooks/useSocket";
 import Modal from "./Modal";
 import { useApi } from "../hooks/useApi";
@@ -154,7 +154,7 @@ function RoomView() {
       minutes = calculateMinutesRounded(startMs, endMs);
 
       if (bill.discountType) {
-        priceTotal = calculatePrice(minutes, caculateDiscount(bill.discountType, bill.discountType === "VND" ? bill.discountAmount || 0 : bill.discountPercent || 0, bill.priceRule?.pricePerHour || 0));
+        priceTotal = calculatePrice(minutes, calculateDiscount(bill.discountType, bill.discountType === "VND" ? bill.discountAmount || 0 : bill.discountPercent || 0, bill.priceRule?.pricePerHour || 0));
       } else {
         priceTotal = calculatePrice(minutes, bill.priceRule?.pricePerHour || 0);
       }
@@ -231,7 +231,7 @@ function RoomView() {
 
         let pricePerHour = room.priceRule?.pricePerHour || 0;
         if (room.discountType) {
-          pricePerHour = caculateDiscount(room.discountType, room.discountType === "VND" ? room.discountAmount || 0 : room.discountPercent || 0, pricePerHour);
+          pricePerHour = calculateDiscount(room.discountType, room.discountType === "VND" ? room.discountAmount || 0 : room.discountPercent || 0, pricePerHour);
         }
         const priceTotal = calculatePrice(minutes, pricePerHour);
 
@@ -655,17 +655,6 @@ function RoomView() {
     setOpenPopupDiscount(true);
   };
 
-  const caculateDiscount = (type: "VND" | "PERCENT", numValue: number, pricePerHour: number) => {
-    let newTotal = 0;
-    if (type === "VND") {
-      newTotal = Math.max(0, (pricePerHour || 0) - numValue);
-    } else {
-      newTotal = Math.max(0, (pricePerHour || 0) * (1 - numValue / 100));
-    }
-
-    return newTotal;
-  };
-
   const onClosePopupDiscount = () => {
     setOpenPopupDiscount(false);
     setType("VND");
@@ -678,12 +667,12 @@ function RoomView() {
     if (isNaN(numValue) || numValue < 0) return;
     setDiscountValue(numValue);
     if (roomDiscount?.priceRule?.pricePerHour !== undefined) {
-      setNewTotalDiscount(caculateDiscount(type, numValue, roomDiscount.priceRule.pricePerHour));
+      setNewTotalDiscount(calculateDiscount(type, numValue, roomDiscount.priceRule.pricePerHour));
     }
   };
 
   const handleChangeTypeDiscount = (discountType: "VND" | "PERCENT") => {
-    setNewTotalDiscount(caculateDiscount(discountType, discountValue, roomDiscount?.priceRule?.pricePerHour || 0));
+    setNewTotalDiscount(calculateDiscount(discountType, discountValue, roomDiscount?.priceRule?.pricePerHour || 0));
     setType(discountType);
   };
 
@@ -973,7 +962,7 @@ function RoomView() {
                             >
                               {existRoom?.priceRule?.pricePerHour.toLocaleString()}đ
                             </span>
-                            {existRoom?.discountType && <span> ➡️ {caculateDiscount(existRoom?.discountType || "VND", existRoom?.discountType === "VND" ? existRoom?.discountAmount || 0 : existRoom?.discountPercent || 0, existRoom?.priceRule?.pricePerHour || 0).toLocaleString()}</span>}
+                            {existRoom?.discountType && <span> ➡️ {calculateDiscount(existRoom?.discountType || "VND", existRoom?.discountType === "VND" ? existRoom?.discountAmount || 0 : existRoom?.discountPercent || 0, existRoom?.priceRule?.pricePerHour || 0).toLocaleString()}</span>}
                           </div>
                         </div>
                         <div className="font-semibold">{existRoom?.priceRule?.total?.toLocaleString()}đ</div>

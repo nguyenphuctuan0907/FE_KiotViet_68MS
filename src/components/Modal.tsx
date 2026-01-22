@@ -4,16 +4,18 @@ import Button from "./Button";
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   children: any;
   size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "full";
   position?: "center" | "top" | "bottom";
   backdrop?: "opaque" | "blur" | "transparent";
   className?: string;
   closeOnBackdropClick?: boolean;
+  confirmText?: string;
+  cancelText?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, children, size = "md", position = "center", backdrop = "opaque", className = "", closeOnBackdropClick = true }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, confirmText, cancelText, children, size = "md", position = "center", backdrop = "opaque", className = "", closeOnBackdropClick = true }) => {
   if (!isOpen) return null;
 
   const sizeClasses = {
@@ -55,16 +57,19 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, children, siz
 
         <div className="modal-action">
           <Button variant="ghost" onClick={onClose}>
-            Huỷ
+            {cancelText || "Hủy"}
           </Button>
-          <Button
+          {
+            onConfirm ?  <Button
             variant="primary"
             onClick={() => {
               onConfirm();
             }}
           >
-            Đồng ý
-          </Button>
+            { confirmText || "Đồng ý"}
+          </Button> : null
+          }
+          
         </div>
       </div>
     </dialog>
